@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>🎬 Trang Chủ | Cinema Plus</title>
+    <style>
+        .section-title {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            line-height: 0.1em;
+            margin: 10px auto 50px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            max-width: 1200px;
+        }
+
+        .section-title span {
+            background: #fdfcf0; /* Màu nền khớp với layout hoặc body */
+            padding: 0 25px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        .movie-card {
+            background: transparent;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .poster-wrapper {
+            position: relative;
+            width: 100%;
+            height: 360px;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .poster-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .movie-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .age-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            color: #fff;
+            padding: 4px 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 5;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Màu sắc Badge phân loại */
+        .badge-P { background-color: #4caf50; }
+        .badge-K { background-color: #2196f3; }
+        .badge-T13 { background-color: #ff9800; }
+        .badge-T16 { background-color: #fb8c00; }
+        .badge-T18 { background-color: #f44336; }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 12px;
+            z-index: 10;
+        }
+
+        .movie-card:hover .overlay { opacity: 1; }
+
+        .btn-detail, .btn-booking {
+            width: 160px;
+            padding: 12px;
+            margin: 8px;
+            border-radius: 5px;
+            text-decoration: none !important;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .btn-detail { background: #fff; color: #333; }
+        .btn-detail:hover { background: #eee; color: #000; }
+
+        .btn-booking { background: #e71a0f; color: #fff; }
+        .btn-booking:hover { background: #ff2a1a; color: #fff; }
+
+        .movie-info { margin-top: 15px; text-align: center; }
+
+        .movie-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111;
+            margin: 5px 0;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-meta { font-size: 14px; color: #777; }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <h2 class="section-title"><span>PHIM ĐANG CHIẾU</span></h2>
+
+    <div class="movie-grid">
+        <div class="movie-card" th:each="m : ${movies}">
+            <div class="poster-wrapper">
+                <span th:class="'age-badge badge-' + ${m.rated}"
+                      th:text="${m.rated != null ? m.rated : 'P'}">P</span>
+
+                <img th:src="${m.image != null} ? @{'/uploads/' + ${m.image}} : '/images/no-poster.jpg'"
+                     alt="Movie Poster"/>
+
+                <div class="overlay">
+                    <a th:href="@{/movies/{id}(id=${m.id})}" class="btn-detail">
+                        <i class="fa fa-info-circle me-1"></i> XEM CHI TIẾT
+                    </a>
+
+                    <a th:href="@{/booking/movie/{id}(id=${m.id})}" class="btn-booking">
+                        <i class="fa fa-ticket-alt me-1"></i> MUA VÉ
+                    </a>
+                </div>
+            </div>
+
+            <div class="movie-info">
+                <p class="movie-title" th:text="${m.title}">Tên Phim</p>
+                <p class="movie-meta">
+                    <span th:text="${m.genre != null ? m.genre.name : 'Phim'}">Thể loại</span> |
+                    <span th:text="${m.duration + ' phút'}">0 phút</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="col-12 text-center py-5" th:if="${#lists.isEmpty(movies)}">
+            <i class="fas fa-film fa-3x text-muted mb-3"></i>
+            <p class="text-muted italic">Hiện tại chưa có phim nào đang chiếu. Vui lòng quay lại sau!</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

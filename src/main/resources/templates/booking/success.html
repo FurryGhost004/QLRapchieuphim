@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt vé thành công | Cinema Plus</title>
+    <style>
+        /* Tùy chỉnh riêng cho trang Success để nó nổi bật trong Layout */
+        .success-container {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .success-card {
+            max-width: 550px;
+            width: 100%;
+            padding: 50px 40px;
+            text-align: center;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
+        }
+        .check-icon {
+            font-size: 90px;
+            color: #28a745;
+            margin-bottom: 25px;
+            animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .btn-home {
+            background-color: #e71a0f;
+            color: white !important;
+            padding: 14px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+            border: none;
+        }
+        .btn-home:hover {
+            background-color: #ff2015;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 26, 15, 0.3);
+        }
+        .btn-view-ticket {
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="success-container">
+        <div class="success-card">
+            <div class="check-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="fw-bold mb-3 text-dark">ĐẶT VÉ THÀNH CÔNG!</h2>
+            <p class="text-muted mb-5 fs-5">
+                Cảm ơn bạn đã tin tưởng dịch vụ của **Cinema Plus**. <br>
+                Giao dịch của bạn đã được xử lý hoàn tất.
+            </p>
+
+            <div class="d-grid gap-3">
+                <a href="/tickets/my-tickets" class="btn btn-dark btn-view-ticket shadow-sm">
+                    <i class="fas fa-ticket-alt me-2"></i>XEM VÉ ĐÃ ĐẶT
+                </a>
+                <a href="/" class="btn-home shadow-sm">
+                    <i class="fas fa-home me-2"></i>QUAY LẠI TRANG CHỦ
+                </a>
+            </div>
+
+            <p class="mt-4 mb-0 text-muted small">
+                Hệ thống đã gửi xác nhận vào lịch sử giao dịch của bạn.
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

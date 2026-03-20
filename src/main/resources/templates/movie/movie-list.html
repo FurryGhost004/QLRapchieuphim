@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Phim Đang Chiếu | Cinema Plus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS riêng cho Movie Selection */
+        .section-title {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            line-height: 0.1em;
+            margin: 20px auto 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            max-width: 1200px;
+        }
+
+        .section-title span {
+            background: #fdfcf0; /* Màu nền khớp với layout */
+            padding: 0 20px;
+            font-size: 26px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 35px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+
+        .movie-card {
+            background: transparent;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .poster-wrapper {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .poster-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .movie-card:hover img {
+            transform: scale(1.08);
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: 0.3s;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        .movie-card:hover .overlay {
+            opacity: 1;
+        }
+
+        .btn-detail, .btn-booking {
+            width: 150px;
+            padding: 12px;
+            margin: 7px;
+            border-radius: 5px;
+            text-decoration: none !important;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .btn-detail {
+            background: #fff;
+            color: #333;
+            border: 1px solid #fff;
+        }
+
+        .btn-detail:hover { background: #f0f0f0; color: #000; }
+
+        .btn-booking {
+            background: #e71a0f;
+            color: #fff;
+            border: 1px solid #e71a0f;
+        }
+
+        .btn-booking:hover {
+            background: #ff2a1a;
+            box-shadow: 0 4px 12px rgba(231, 26, 15, 0.4);
+        }
+
+        .movie-info {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .movie-title {
+            font-size: 17px;
+            font-weight: bold;
+            color: #111;
+            margin: 5px 0;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-meta {
+            font-size: 14px;
+            color: #777;
+        }
+
+        .age-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: #ffc107;
+            color: #000;
+            padding: 3px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 13px;
+            z-index: 5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <h2 class="section-title"><span>MOVIE SELECTION</span></h2>
+
+    <div class="movie-grid">
+        <div class="movie-card" th:each="m : ${movies}">
+
+            <div class="poster-wrapper">
+                <span class="age-badge"
+                      th:text="${m.rated != null ? m.rated : 'P'}"
+                      th:style="${m.rated == 'T18' ? 'background:#f44336; color:#fff;' : ''}">T13</span>
+
+                <img th:src="${m.image != null} ? @{'/uploads/' + ${m.image}} : '/images/no-poster.jpg'"
+                     alt="Movie Poster"/>
+
+                <div class="overlay">
+                    <a th:href="@{/movies/{id}(id=${m.id})}" class="btn-detail">
+                        <i class="fas fa-info-circle me-1"></i> XEM CHI TIẾT
+                    </a>
+                    <a th:href="@{/booking/movie/{id}(id=${m.id})}" class="btn-booking">
+                        <i class="fas fa-ticket-alt me-1"></i> MUA VÉ
+                    </a>
+                </div>
+            </div>
+
+            <div class="movie-info">
+                <p class="movie-title" th:text="${m.title}">Tên Phim</p>
+                <p class="movie-meta">
+                    <span th:text="${m.genre != null ? m.genre.name : 'Phim'}">Thể loại</span> |
+                    <span th:text="${m.duration + ' phút'}">120 phút</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(movies)}" class="text-center py-5">
+        <i class="fas fa-film fa-3x text-muted mb-3"></i>
+        <p class="text-muted fs-5">Hiện tại chưa có phim nào đang chiếu.</p>
+    </div>
+</div>
+
+</body>
+</html>

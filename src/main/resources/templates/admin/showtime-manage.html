@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Suất Chiếu | Admin</title>
+    <style>
+        .manage-container { margin-top: 30px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .table thead { background-color: #f8f9fa; }
+        .badge-time { font-size: 0.9rem; background: #e8f5e9; color: #2e7d32; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+        .movie-title { font-weight: bold; color: #333; }
+        .btn-action { border-radius: 8px; transition: 0.2s; }
+        .btn-action:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="container pb-5">
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div>
+                <h2 class="fw-bold text-dark mb-0">DANH SÁCH SUẤT CHIẾU</h2>
+                <p class="text-muted">Quản lý lịch chiếu phim tại các cụm rạp.</p>
+            </div>
+            <a th:href="@{/admin/showtimes/add}" class="btn btn-success btn-lg fw-bold shadow-sm">
+                <i class="fas fa-plus-circle me-2"></i>Tạo Suất Chiếu Mới
+            </a>
+        </div>
+
+        <div class="manage-container">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                    <tr>
+                        <th>Phim</th>
+                        <th>Rạp / Phòng</th>
+                        <th>Thời Gian</th>
+                        <th>Giá Vé</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="st : ${showtimes}">
+                        <td>
+                            <div class="movie-title" th:text="${st.movie.title}">Tên phim</div>
+                            <small class="text-muted" th:text="${st.movie.genre.name}">Thể loại</small>
+                        </td>
+                        <td>
+                            <div th:text="${st.cinema.name}">Tên rạp</div>
+                            <small class="badge bg-light text-dark border" th:text="${st.room.name}">Phòng</small>
+                        </td>
+                        <td>
+                            <div class="mb-1">
+                                <i class="far fa-calendar-alt me-1 text-primary"></i>
+                                <span th:text="${#temporals.format(st.date, 'dd/MM/yyyy')}">19/03/2026</span>
+                            </div>
+                            <span class="badge-time">
+                                    <i class="far fa-clock me-1"></i>
+                                    <span th:text="${st.startTime}">18:00</span>
+                                </span>
+                        </td>
+                        <td>
+                            <strong class="text-danger" th:text="${#numbers.formatDecimal(st.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">85.000đ</strong>
+                        </td>
+                        <td class="text-center">
+                            <a th:href="@{/admin/showtimes/edit/{id}(id=${st.id})}" class="btn btn-outline-warning btn-sm btn-action me-2">
+                                <i class="fas fa-edit"></i> Sửa
+                            </a>
+                            <a th:href="@{/admin/showtimes/delete/{id}(id=${st.id})}"
+                               class="btn btn-outline-danger btn-sm btn-action"
+                               onclick="return confirm('Bạn có chắc chắn muốn xóa suất chiếu này?')">
+                                <i class="fas fa-trash"></i> Xóa
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(showtimes)}">
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                            <p>Chưa có suất chiếu nào được thiết lập.</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

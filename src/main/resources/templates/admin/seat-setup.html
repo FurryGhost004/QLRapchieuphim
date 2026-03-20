@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Thiết lập sơ đồ ghế | Cinema Plus</title>
+    <style>
+        /* Ép kiểu Grid cực mạnh để không bị Layout đè */
+        #seatGrid {
+            display: grid !important;
+            grid-template-columns: repeat(12, 45px) !important;
+            gap: 10px !important;
+            justify-content: center !important;
+            padding: 20px !important;
+            min-height: 200px;
+        }
+
+        .seat-setup {
+            width: 45px; height: 45px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 11px; border-radius: 6px;
+            transition: all 0.2s; user-select: none; font-weight: bold;
+            box-sizing: border-box;
+        }
+
+        /* Màu sắc ghế */
+        .seat-setup.EMPTY { background-color: #ffffff !important; color: #ddd !important; border: 1px dashed #ccc !important; }
+        .seat-setup.NORMAL { background-color: #ffffff !important; color: #31821b !important; border: 2px solid #31821b !important; }
+        .seat-setup.VIP { background-color: #fff0f0 !important; color: #f44336 !important; border: 2px solid #f44336 !important; }
+        .seat-setup.SWEETBOX { background-color: #f26522 !important; color: white !important; border: 2px solid #f26522 !important; }
+
+        .seat-setup:hover { transform: scale(1.15); z-index: 5; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="container py-5">
+        <div class="bg-white p-4 shadow rounded-4" style="max-width: 1000px; margin: auto;">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-0">Thiết lập sơ đồ ghế</h3>
+                    <p class="text-muted">Phòng: <span class="text-danger fw-bold" th:text="${room.name}"></span></p>
+                </div>
+                <a th:href="@{/admin/cinemas/{id}/rooms(id=${room.cinema.id})}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="text-center mb-5">
+                <div style="height: 6px; background: #333; width: 60%; margin: 0 auto; border-radius: 10px;"></div>
+                <small class="text-muted fw-bold">MÀN HÌNH</small>
+            </div>
+
+            <div class="border rounded bg-light shadow-inner" style="overflow-x: auto;">
+                <div id="seatGrid">
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+                <div class="small d-flex align-items-center"><div class="seat-setup EMPTY me-1" style="width:20px; height:20px;"></div> Trống</div>
+                <div class="small d-flex align-items-center"><div class="seat-setup NORMAL me-1" style="width:20px; height:20px;"></div> Thường</div>
+                <div class="small d-flex align-items-center"><div class="seat-setup VIP me-1" style="width:20px; height:20px;"></div> VIP</div>
+                <div class="small d-flex align-items-center"><div class="seat-setup SWEETBOX me-1" style="width:20px; height:20px;"></div> Sweetbox</div>
+            </div>
+
+            <div class="text-center mt-5">
+                <button onclick="saveLayout()" class="btn btn-success btn-lg px-5 fw-bold">
+                    <i class="fas fa-save me-2"></i> LƯU SƠ ĐỒ GHẾ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // 1. Ép kiểu dữ liệu về Array để tránh lỗi null/undefined
+        const rawData = /*[[${seats}]]*/ [];
+        const existingSeats = Array.isArray(rawData) ? rawData : [];
+
+        const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        const cols = 12;
+
+        function renderSeats() {
+            const grid = document.getElementById('seatGrid');
+            if (!grid) {
+                console.error("Không tìm thấy thẻ seatGrid!");
+                return;
+            }
+
+            grid.innerHTML = ''; // Clear
+
+            rows.forEach(row => {
+                for (let col = 1; col <= cols; col++) {
+                    const div = document.createElement('div');
+
+                    // Tìm ghế
+                    const found = existingSeats.find(s => s.rowName === row && s.seatNumber == col);
+                    const currentType = found ? found.type : 'EMPTY';
+
+                    div.dataset.row = row;
+                    div.dataset.col = col;
+                    div.dataset.type = currentType;
+                    div.className = 'seat-setup ' + currentType;
+                    div.innerText = row + col;
+
+                    div.onclick = function() {
+                        const types = ['EMPTY', 'NORMAL', 'VIP', 'SWEETBOX'];
+                        let nextIdx = (types.indexOf(this.dataset.type) + 1) % types.length;
+                        this.dataset.type = types[nextIdx];
+                        this.className = 'seat-setup ' + types[nextIdx];
+                    };
+
+                    grid.appendChild(div);
+                }
+            });
+            console.log("Đã vẽ xong " + (rows.length * cols) + " ô ghế.");
+        }
+
+        // 2. Chạy render ngay lập tức VÀ chạy lại khi trang load xong hoàn toàn
+        renderSeats();
+
+        window.onload = function() {
+            if (document.getElementById('seatGrid').children.length === 0) {
+                renderSeats();
+            }
+        };
+
+        function saveLayout() {
+            const seats = document.querySelectorAll('.seat-setup');
+            const data = Array.from(seats)
+                .filter(s => s.dataset.type !== 'EMPTY')
+                .map(s => ({
+                    rowName: s.dataset.row,
+                    seatNumber: s.dataset.col,
+                    type: s.dataset.type
+                }));
+
+            // Lấy URL lưu: thay thế 'setup' bằng 'save' trong URL hiện tại
+            const saveUrl = window.location.pathname.replace('/setup', '/save');
+
+            fetch(saveUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(res => {
+                if(res.ok) {
+                    alert('🎉 Lưu sơ đồ thành công!');
+                    window.location.reload();
+                } else {
+                    alert('❌ Lỗi: Không thể lưu. Hãy kiểm tra lại API.');
+                }
+            }).catch(err => alert("Lỗi kết nối: " + err));
+        }
+    </script>
+</div>
+</body>
+</html>

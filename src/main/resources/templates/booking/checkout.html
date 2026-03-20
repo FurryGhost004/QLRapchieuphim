@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác nhận thanh toán | Cinema Plus</title>
+    <style>
+        .checkout-container { max-width: 650px; margin: 20px auto 50px; }
+        .checkout-card { border-radius: 15px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .order-summary { background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px; border-left: 5px solid #e71a0f; }
+        .movie-info-title { color: #e71a0f; text-transform: uppercase; letter-spacing: 1px; font-size: 1.25rem; }
+        .payment-detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .payment-detail-row:last-child { border-bottom: none; }
+        .total-row { border-top: 2px dashed #ddd; padding-top: 20px; margin-top: 20px; }
+        .btn-confirm { background-color: #28a745; border: none; padding: 15px; font-weight: bold; font-size: 18px; transition: 0.3s; border-radius: 10px; }
+        .btn-confirm:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); }
+        .badge-seat { background-color: #e71a0f; padding: 5px 10px; border-radius: 5px; font-size: 0.85rem; margin-left: 4px; }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="checkout-container">
+        <div class="d-flex justify-content-between mb-4 text-muted small px-3">
+            <span>1. CHỌN GHẾ <i class="fas fa-check-circle text-success"></i></span>
+            <span class="fw-bold text-dark border-bottom border-primary pb-1">2. THANH TOÁN <i class="fas fa-dot-circle text-primary"></i></span>
+            <span>3. HOÀN TẤT</span>
+        </div>
+
+        <div class="card checkout-card">
+            <div class="card-header bg-dark text-white text-center py-3">
+                <h4 class="mb-0 fw-bold"><i class="fas fa-shopping-cart me-2"></i>THÔNG TIN ĐƠN HÀNG</h4>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="order-summary shadow-sm">
+                    <h5 class="movie-info-title fw-bold mb-3" th:text="${showtime.movie.title}">Tên phim</h5>
+
+                    <div class="payment-detail-row">
+                        <span class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Rạp:</span>
+                        <span class="fw-bold" th:text="${showtime.cinema.name}"></span>
+                    </div>
+                    <div class="payment-detail-row">
+                        <span class="text-muted"><i class="fas fa-door-open me-2"></i>Phòng:</span>
+                        <span class="fw-bold" th:text="${showtime.room.name}"></span>
+                    </div>
+                    <div class="payment-detail-row">
+                        <span class="text-muted"><i class="fas fa-clock me-2"></i>Suất chiếu:</span>
+                        <span class="fw-bold"
+                              th:text="${#temporals.format(showtime.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(showtime.date, 'dd/MM/yyyy')}">
+                        </span>
+                    </div>
+                    <div class="payment-detail-row align-items-center">
+                        <span class="text-muted"><i class="fas fa-couch me-2"></i>Ghế đã chọn:</span>
+                        <div class="text-end">
+                            <span th:each="s : ${seats}"
+                                  th:text="${s.rowName + s.seatNumber}"
+                                  class="badge badge-seat"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-methods mb-4">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-wallet me-2"></i>Phương thức thanh toán</h6>
+                    <div class="form-check border rounded p-3 mb-2 bg-light shadow-sm">
+                        <input class="form-check-input ms-0 me-3" type="radio" name="payMethod" id="momo" checked>
+                        <label class="form-check-label fw-bold d-flex align-items-center" for="momo">
+                            <img th:src="@{/images/momo_icon.png}" width="25" class="me-2" onerror="this.style.display='none'">
+                            Ví điện tử (MoMo / ZaloPay)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="total-row d-flex justify-content-between align-items-center mb-4">
+                    <span class="h5 mb-0 fw-bold">TỔNG CỘNG:</span>
+                    <span class="h2 text-danger fw-bold mb-0"
+                          th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
+                </div>
+
+                <form th:action="@{/booking/confirm}" method="post">
+                    <input type="hidden" name="showtimeId" th:value="${showtime.id}">
+
+                    <input type="hidden" name="seatIds" th:value="${#strings.listJoin(seatIds, ',')}">
+
+                    <input type="hidden" name="totalAmount" th:value="${totalAmount}">
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-confirm shadow-sm">
+                            XÁC NHẬN ĐẶT VÉ
+                        </button>
+                        <a href="javascript:history.back()" class="btn btn-link text-decoration-none text-muted mt-2">
+                            <i class="fas fa-arrow-left me-1"></i> Quay lại thay đổi ghế
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-footer bg-light text-center py-3 text-muted small border-top-0">
+                <i class="fas fa-lock me-1"></i> Mọi giao dịch đều được mã hóa an toàn 256-bit
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

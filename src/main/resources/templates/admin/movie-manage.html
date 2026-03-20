@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Phim | Cinema Plus Admin</title>
+  <style>
+    /* Container bọc ngoài để tách biệt với các phần khác của layout */
+    .admin-content-wrapper {
+        padding: 40px 0;
+        background-color: #1e1e2f; /* Màu nền tối đồng bộ với form của bạn */
+        min-height: 100vh;
+    }
+
+    .movie-manage-container {
+        max-width: 1200px;
+        margin: auto;
+        background: #2f2f4f;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        color: white;
+    }
+
+    .movie-manage-container h2 {
+        text-align: center;
+        color: #f9ca24;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 30px;
+        font-weight: bold;
+    }
+
+    .btn-add-movie {
+        display: inline-block;
+        padding: 12px 25px;
+        background: #f9ca24;
+        color: #1e1e2f !important;
+        text-decoration: none !important;
+        font-weight: bold;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(249, 202, 36, 0.3);
+    }
+
+    .btn-add-movie:hover {
+        background: #f6b93b;
+        transform: translateY(-2px);
+    }
+
+    .movie-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: #3b3b5e;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .movie-table th, .movie-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #4e4e7a;
+    }
+
+    .movie-table th {
+        background-color: #44446e;
+        color: #f9ca24;
+        text-transform: uppercase;
+        font-size: 13px;
+        letter-spacing: 1px;
+    }
+
+    .movie-table tbody tr:hover {
+        background-color: #44447a;
+        transition: 0.2s;
+    }
+
+    .movie-img {
+        width: 65px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 2px solid #4e4e7a;
+        transition: 0.3s;
+    }
+
+    .movie-table tr:hover .movie-img {
+        border-color: #f9ca24;
+        transform: scale(1.05);
+    }
+
+    /* Badge phân loại độ tuổi */
+    .rated-badge {
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 11px;
+        color: white;
+        display: inline-block;
+        text-align: center;
+        min-width: 45px;
+    }
+    .rated-P { background-color: #2ecc71; }   /* Mọi lứa tuổi */
+    .rated-K { background-color: #3498db; }   /* Dưới 13 */
+    .rated-T13 { background-color: #f39c12; } /* 13+ */
+    .rated-T16 { background-color: #e67e22; } /* 16+ */
+    .rated-T18 { background-color: #e74c3c; } /* 18+ */
+
+    .action-links {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        padding: 8px 15px;
+        text-decoration: none !important;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: white !important;
+        transition: 0.2s;
+    }
+    .btn-edit { background: #3498db; }
+    .btn-edit:hover { background: #2980b9; }
+
+    .btn-delete { background: #e74c3c; }
+    .btn-delete:hover { background: #c0392b; }
+
+    .empty-msg {
+        text-align: center;
+        padding: 50px !important;
+        color: #888;
+        font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+  <div class="admin-content-wrapper">
+    <div class="movie-manage-container">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2>🎬 DANH SÁCH QUẢN LÝ PHIM</h2>
+        <a th:href="@{/admin/movies/add}" class="btn-add-movie shadow-sm">
+          <i class="fas fa-plus-circle me-1"></i> THÊM PHIM MỚI
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="movie-table">
+          <thead>
+          <tr>
+            <th width="100">Poster</th>
+            <th>Thông tin phim</th>
+            <th>Thể loại</th>
+            <th class="text-center">Độ tuổi</th>
+            <th>Thời lượng</th>
+            <th width="180">Thao tác</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="m : ${movies}">
+            <td>
+              <img th:src="${m.image != null} ? @{'/uploads/' + ${m.image}} : '/images/default-movie.png'"
+                   class="movie-img shadow" alt="Poster"/>
+            </td>
+
+            <td>
+              <div class="fw-bold fs-5" th:text="${m.title}" style="color: #f9ca24;"></div>
+              <div class="small mt-1" style="color: #bbb;">
+                <i class="fas fa-video me-1"></i> Đạo diễn: <span th:text="${m.director}"></span>
+              </div>
+            </td>
+
+            <td>
+                                <span class="badge bg-outline-info"
+                                      style="border: 1px solid #3498db; color: #3498db; padding: 5px 10px;"
+                                      th:text="${m.genre != null ? m.genre.name : 'Chưa rõ'}"></span>
+            </td>
+
+            <td class="text-center">
+                                <span th:class="'rated-badge rated-' + ${m.rated}"
+                                      th:text="${m.rated != null ? m.rated : 'P'}"></span>
+            </td>
+
+            <td>
+              <i class="far fa-clock me-1 text-muted"></i>
+              <span th:text="${m.duration + ' phút'}"></span>
+            </td>
+
+            <td>
+              <div class="action-links">
+                <a th:href="@{/admin/movies/edit/{id}(id=${m.id})}" class="btn-action btn-edit shadow-sm">
+                  <i class="fas fa-edit"></i> Sửa
+                </a>
+                <a th:href="@{/admin/movies/delete/{id}(id=${m.id})}"
+                   class="btn-action btn-delete shadow-sm"
+                   onclick="return confirm('⚠️ CẢNH BÁO: Xóa phim sẽ xóa tất cả suất chiếu liên quan. Bạn chắc chắn chứ?')">
+                  <i class="fas fa-trash-alt"></i> Xóa
+                </a>
+              </div>
+            </td>
+          </tr>
+
+          <tr th:if="${#lists.isEmpty(movies)}">
+            <td colspan="6" class="empty-msg">
+              <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
+              Hiện chưa có phim nào trong hệ thống. Hãy bắt đầu bằng cách thêm phim mới!
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

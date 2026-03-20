@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Phòng chiếu - ' + ${cinema.name} + ' | Admin'"></title>
+    <style>
+        .admin-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+        .cinema-header-info {
+            background: #f8f9fa;
+            border-left: 5px solid #e71a0f;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        /* Style cho bảng để trông chuyên nghiệp hơn */
+        .table-rooms thead {
+            background-color: #212529;
+            color: #fff;
+        }
+        .btn-setup-seat {
+            background-color: #6c5ce7;
+            color: white !important;
+            border: none;
+            transition: 0.3s;
+        }
+        .btn-setup-seat:hover {
+            background-color: #4834d4;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="container-fluid px-4 py-4">
+
+        <div class="cinema-header-info d-flex justify-content-between align-items-center shadow-sm">
+            <div>
+                <h3 class="fw-bold mb-1 text-dark">
+                    <i class="fas fa-door-open me-2 text-danger"></i>DANH SÁCH PHÒNG CHIẾU
+                </h3>
+                <p class="text-muted mb-0">Rạp: <strong th:text="${cinema.name}"></strong> | <i class="fas fa-map-marker-alt me-1"></i> <span th:text="${cinema.address}"></span></p>
+            </div>
+            <button class="btn btn-success fw-bold px-4 shadow-sm" onclick="showAddModal()">
+                <i class="fas fa-plus-circle me-1"></i> THÊM PHÒNG MỚI
+            </button>
+        </div>
+
+        <div class="admin-box">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle table-rooms">
+                    <thead>
+                    <tr>
+                        <th width="100">ID</th>
+                        <th>Tên Phòng Chiếu</th>
+                        <th class="text-center">Cấu hình</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="room : ${rooms}">
+                        <td class="text-muted fw-bold" th:text="'#' + ${room.id}"></td>
+                        <td>
+                            <span class="fw-bold fs-5 text-dark" th:text="${room.name}"></span>
+                        </td>
+                        <td class="text-center">
+                            <a th:href="@{/admin/rooms/{id}/seats/setup(id=${room.id})}"
+                               class="btn btn-setup-seat btn-sm px-3 shadow-sm">
+                                <i class="fas fa-th me-1"></i> Thiết lập sơ đồ ghế
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-link text-warning me-2 p-0 shadow-none"
+                                    th:onclick="'showEditModal(' + ${room.id} + ')'" title="Sửa tên">
+                                <i class="fas fa-edit fa-lg"></i>
+                            </button>
+                            <a th:href="@{/admin/rooms/delete/{id}(id=${room.id})}"
+                               class="btn btn-link text-danger p-0 shadow-none"
+                               onclick="return confirm('CẢNH BÁO: Xóa phòng sẽ xóa toàn bộ dữ liệu ghế và suất chiếu của phòng này. Bạn chắc chắn chứ?')">
+                                <i class="fas fa-trash-alt fa-lg"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(rooms)}">
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="fas fa-couch fa-3x mb-3 d-block opacity-25"></i>
+                            Rạp này hiện chưa được cấu hình phòng chiếu.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4">
+                <a th:href="@{/admin/cinemas}" class="btn btn-outline-dark">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách rạp
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="roomModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form th:action="@{/admin/rooms/save}" method="post" class="w-100">
+                <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
+                    <div class="modal-header bg-dark text-white border-0">
+                        <h5 class="modal-title fw-bold" id="modalTitle">Cấu hình Phòng Chiếu</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <input type="hidden" name="cinemaId" th:value="${cinema.id}">
+                        <input type="hidden" name="id" id="roomId">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Tên phòng chiếu</label>
+                            <input type="text" name="name" id="roomName" class="form-control form-control-lg"
+                                   placeholder="VD: Cinema 01, IMAX..." required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="button" class="btn btn-light px-4 fw-bold" data-bs-dismiss="modal">HỦY</button>
+                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">LƯU PHÒNG</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <script th:inline="javascript">
+        // Khởi tạo Modal bằng Vanilla JS (Không cần jQuery)
+        let bootstrapModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Khởi tạo đối tượng Modal của Bootstrap
+            const modalElement = document.getElementById('roomModal');
+            if (modalElement) {
+                bootstrapModal = new bootstrap.Modal(modalElement);
+            }
+        });
+
+        // Hàm hiển thị Modal Thêm mới
+        function showAddModal() {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus me-2"></i>THÊM PHÒNG MỚI';
+            document.getElementById('roomId').value = '';
+            document.getElementById('roomName').value = '';
+            if (bootstrapModal) bootstrapModal.show();
+        }
+
+        // Hàm hiển thị Modal Chỉnh sửa
+        function showEditModal(id) {
+            // Sử dụng Fetch API thay cho $.get để không phụ thuộc jQuery
+            fetch('/admin/rooms/edit/' + id)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(room => {
+                    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>SỬA TÊN PHÒNG';
+                    document.getElementById('roomId').value = room.id;
+                    document.getElementById('roomName').value = room.name;
+                    if (bootstrapModal) bootstrapModal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Không thể tải thông tin phòng chiếu. Lỗi: " + error.message);
+                });
+        }
+    </script>
+</div>
+
+</body>
+</html>

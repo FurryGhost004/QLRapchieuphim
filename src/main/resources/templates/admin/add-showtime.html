@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"> <head>
+    <meta charset="UTF-8">
+    <title>Quản lý Suất Chiếu | Admin</title>
+    <style>
+        .admin-card {
+            max-width: 850px;
+            margin: 20px auto 50px;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+        .form-label {
+            color: #444;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .form-control, .form-select {
+            border-radius: 6px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #e71a0f;
+            box-shadow: 0 0 0 0.25rem rgba(231, 26, 15, 0.1);
+        }
+        .section-header {
+            border-left: 5px solid #e71a0f;
+            padding-left: 15px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="admin-card">
+        <div class="section-header">
+            <h3 class="fw-bold mb-1">Cấu hình Suất Chiếu</h3>
+            <p class="text-muted small">Vui lòng điền đầy đủ thông tin để tạo lịch chiếu phim mới.</p>
+        </div>
+
+        <form th:action="@{/admin/showtimes/save}" th:object="${showtime}" method="post">
+            <input type="hidden" th:field="*{id}">
+
+            <div class="row">
+                <div class="col-md-12 mb-4">
+                    <label class="form-label fw-bold"><i class="fas fa-film me-2"></i>Chọn Phim:</label>
+                    <select th:field="*{movie.id}" class="form-select" required>
+                        <option value="">-- Chọn bộ phim đang chiếu --</option>
+                        <option th:each="m : ${movies}" th:value="${m.id}" th:text="${m.title}"></option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold"><i class="fas fa-building me-2"></i>Chọn Rạp:</label>
+                    <select id="cinema-select" th:field="*{cinema.id}" class="form-select" required>
+                        <option value="">-- Chọn chi nhánh rạp --</option>
+                        <option th:each="c : ${cinemas}" th:value="${c.id}" th:text="${c.name}"></option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold"><i class="fas fa-door-open me-2"></i>Chọn Phòng Chiếu:</label>
+                    <select id="room-select" th:field="*{room.id}" class="form-select" required>
+                        <option value="">-- Vui lòng chọn rạp trước --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold"><i class="fas fa-calendar-alt me-2"></i>Ngày chiếu:</label>
+                    <input type="date" th:field="*{date}" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Giờ bắt đầu:</label>
+                    <input type="time" th:field="*{startTime}" class="form-control" required>
+                </div>
+
+                <div class="col-md-12 mb-4">
+                    <label class="form-label fw-bold"><i class="fas fa-tags me-2"></i>Giá vé (VNĐ):</label>
+                    <div class="input-group">
+                        <input type="number" th:field="*{price}" class="form-control" placeholder="85000" required>
+                        <span class="input-group-text">VNĐ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-danger px-5 fw-bold shadow-sm">
+                    <i class="fas fa-save me-2"></i>LƯU SUẤT CHIẾU
+                </button>
+                <a href="/admin/showtimes" class="btn btn-outline-secondary px-4">
+                    Quay lại danh sách
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script th:inline="javascript">
+        document.getElementById('cinema-select').addEventListener('change', function() {
+            const cinemaId = this.value;
+            const roomSelect = document.getElementById('room-select');
+
+            roomSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+
+            if (!cinemaId) {
+                roomSelect.innerHTML = '<option value="">-- Vui lòng chọn rạp trước --</option>';
+                return;
+            }
+
+            fetch('/api/rooms/' + cinemaId)
+                .then(response => {
+                    if (!response.ok) throw new Error('Không tìm thấy API');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.length === 0) {
+                        roomSelect.innerHTML = '<option value="">-- Rạp này chưa có phòng --</option>';
+                    } else {
+                        roomSelect.innerHTML = '<option value="">-- Chọn phòng --</option>';
+                        data.forEach(room => {
+                            const option = document.createElement('option');
+                            option.value = room.id;
+                            option.textContent = room.name;
+                            roomSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    roomSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+                });
+        });
+    </script>
+</div>
+</body>
+</html>

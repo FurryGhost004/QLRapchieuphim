@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Rạp Phim | Admin</title>
+    <style>
+        .admin-section {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .table-cinema thead {
+            background-color: #222;
+            color: #fff;
+        }
+        .cinema-name-link {
+            color: #e71a0f;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .cinema-name-link:hover {
+            color: #ff2015;
+            text-decoration: underline !important;
+        }
+        .btn-room-manage {
+            background-color: #007bff;
+            color: white !important;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .btn-room-manage:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .add-cinema-box {
+            border-left: 5px solid #007bff;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="container-fluid px-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold"><i class="fas fa-building me-2 text-primary"></i>QUẢN LÝ HỆ THỐNG RẠP</h2>
+            <div>
+                <a href="/admin/movies" class="btn btn-outline-dark btn-sm me-2">
+                    <i class="fas fa-film me-1"></i> Quản lý Phim
+                </a>
+                <a href="/admin/showtimes" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-calendar-alt me-1"></i> Quản lý Suất Chiếu
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-section add-cinema-box p-4 shadow-sm">
+            <h5 class="fw-bold mb-3"><i class="fas fa-plus-circle me-2"></i>Thêm Rạp Mới</h5>
+            <form th:action="@{/admin/cinemas/save}" th:object="${cinema}" method="post" class="row g-3">
+                <div class="col-md-5">
+                    <label class="small fw-bold text-muted">Tên rạp</label>
+                    <input type="text" th:field="*{name}" class="form-control" placeholder="VD: Cinema Plus - Hùng Vương" required>
+                </div>
+                <div class="col-md-5">
+                    <label class="small fw-bold text-muted">Địa chỉ</label>
+                    <input type="text" th:field="*{address}" class="form-control" placeholder="Số 123, Quận 1, TP.HCM" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="fas fa-save me-1"></i> LƯU RẠP
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle table-cinema">
+                    <thead>
+                    <tr>
+                        <th width="80">ID</th>
+                        <th>Tên Chi Nhánh</th>
+                        <th>Địa Chỉ</th>
+                        <th class="text-center">Cơ Sở Vật Chất</th>
+                        <th class="text-center">Hành Động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${cinemas}">
+                        <td class="text-muted fw-bold" th:text="'#' + ${c.id}"></td>
+                        <td>
+                            <a th:href="@{/admin/cinemas/{id}/rooms(id=${c.id})}"
+                               class="cinema-name-link text-decoration-none"
+                               th:text="${c.name}"></a>
+                        </td>
+                        <td th:text="${c.address}"></td>
+                        <td class="text-center">
+                            <a th:href="@{/admin/cinemas/{id}/rooms(id=${c.id})}"
+                               class="btn btn-room-manage btn-sm shadow-sm">
+                                <i class="fas fa-door-open me-1"></i> Quản lý Phòng chiếu
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a th:href="@{/admin/cinemas/delete/{id}(id=${c.id})}"
+                               class="btn btn-link text-danger p-0 ms-2"
+                               onclick="return confirm('CẢNH BÁO: Xóa rạp này sẽ xóa toàn bộ Phòng và Suất chiếu liên quan. Bạn vẫn muốn tiếp tục?')">
+                                <i class="fas fa-trash-alt"></i> Xóa
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${#lists.isEmpty(cinemas)}" class="text-center py-5">
+                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" width="100" class="mb-3 opacity-50">
+                <p class="text-muted fs-5 italic">Chưa có rạp nào được khởi tạo trong hệ thống.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
