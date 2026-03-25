@@ -22,22 +22,33 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class BookingController {
 
-    @Autowired private UserService userService;
-    @Autowired private MovieService movieService;
-    @Autowired private ShowtimeService showtimeService;
-    @Autowired private BookingService bookingService;
-    @Autowired private SeatService seatService; // ĐÃ THÊM: Hết lỗi 'Cannot resolve symbol'
-    @Autowired private SeatRepository seatRepository;
-    @Autowired private TicketService ticketService;
-    @Autowired private BookingRepository bookingRepository;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private MovieService movieService;
+    @Autowired
+    private ShowtimeService showtimeService;
+    @Autowired
+    private BookingService bookingService;
+    @Autowired
+    private SeatService seatService; // ĐÃ THÊM: Hết lỗi 'Cannot resolve symbol'
+    @Autowired
+    private SeatRepository seatRepository;
+    @Autowired
+    private TicketService ticketService;
+    @Autowired
+    private BookingRepository bookingRepository;
+    @Autowired
+    private MoMoService moMoService;
 
     // 1. Xem lịch chiếu
     @GetMapping("/booking/movie/{movieId}")
     public String getShowtimes(@PathVariable Long movieId,
-                               @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                               Model model) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Model model) {
         Movie movie = movieService.findById(movieId);
-        if (movie == null) return "error/404";
+        if (movie == null)
+            return "error/404";
 
         List<LocalDate> dates = IntStream.range(0, 15)
                 .mapToObj(i -> LocalDate.now().plusDays(i))
@@ -71,8 +82,8 @@ public class BookingController {
     // 3. Hiển thị trang Checkout (Xử lý tính toán giá VIP +10%, SWEETBOX +30%)
     @PostMapping("/booking/checkout")
     public String showCheckout(@RequestParam Long showtimeId,
-                               @RequestParam("seatIds") String seatIdsStr, // Nhận chuỗi ID từ form
-                               Model model) {
+            @RequestParam("seatIds") String seatIdsStr, // Nhận chuỗi ID từ form
+            Model model) {
 
         Showtime showtime = showtimeService.findById(showtimeId);
 
@@ -111,8 +122,8 @@ public class BookingController {
     // 4. Lưu chính thức đặt vé vào Database
     @PostMapping("/booking/confirm")
     public String confirmBooking(@RequestParam Long showtimeId,
-                                 @RequestParam List<Long> seatIds,
-                                 Principal principal) {
+            @RequestParam List<Long> seatIds,
+            Principal principal) {
         User user = userService.findByUsername(principal.getName());
         bookingService.confirmBooking(showtimeId, seatIds, user);
         return "redirect:/booking/success";
@@ -132,5 +143,72 @@ public class BookingController {
 
         model.addAttribute("bookings", myBookings);
         return "booking/my-tickets";
+    }
+
+    @PostMapping("/booking/momo-payment")
+    public String momoPayment(@RequestParam Long showtimeId,
+            @RequestParam("seatIds") String seatIdsStr,
+            Principal principal, Model model) {
+        try {
+            Showtime showtime = showtimeService.findById(showtimeId);
+            List<Long> seatIds = Arrays.stream(seatIdsStr.split(","))
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+            List<Seat> selectedSeats = seatService.findAllById(seatIds);
+
+            double total = 0;
+            double basePrice = showtime.getPrice();
+            for (Seat seat : selectedSeats) {
+                String type = (seat.getType() != null) ? seat.getType().toUpperCase().trim() : "NORMAL";
+                double currentSeatPrice = basePrice;
+                if ("VIP".equals(type)) {
+                    currentSeatPrice = basePrice * 1.1;
+                } else if ("SWEETBOX".equals(type)) {
+                    currentSeatPrice = basePrice * 1.3;
+                }
+                total += currentSeatPrice;
+            }
+
+            String orderId = java.util.UUID.randomUUID().toString();
+            String orderInfo = "Thanh toan ve";
+            String extraData = "";
+
+            Map<String, Object> response = moMoService.createPaymentRequest(orderId, orderInfo, (long) total,
+                    extraData);
+            String payUrl = (String) response.get("payUrl");
+            if (payUrl != null && !payUrl.isEmpty()) {
+                return "redirect:" + payUrl;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/booking/movie/" + showtimeId + "?error=payment";
+    }
+
+    @GetMapping("/booking/momo-return")
+    public String momoReturn(@RequestParam Map<String, String> params, Principal principal) {
+        try {
+            if (moMoService.verifySignature(params)) {
+                String resultCode = params.get("resultCode");
+                if ("0".equals(resultCode)) {
+                    String extraData = params.get("extraData");
+                    String decodedExtraData = new String(java.util.Base64.getDecoder().decode(extraData));
+                    String[] parts = decodedExtraData.split("&");
+                    Long showtimeId = Long.parseLong(parts[0].split("=")[1]);
+                    String seatIdsStr = parts[1].split("=")[1];
+
+                    List<Long> seatIds = Arrays.stream(seatIdsStr.split(","))
+                            .map(Long::parseLong)
+                            .collect(Collectors.toList());
+
+                    User user = userService.findByUsername(principal.getName());
+                    bookingService.confirmBooking(showtimeId, seatIds, user);
+                    return "redirect:/booking/success";
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/booking/success?error=payment_failed";
     }
 }

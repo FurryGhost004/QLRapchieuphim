@@ -63,11 +63,20 @@
 
                 <div class="payment-methods mb-4">
                     <h6 class="fw-bold mb-3"><i class="fas fa-wallet me-2"></i>Phương thức thanh toán</h6>
+                    
                     <div class="form-check border rounded p-3 mb-2 bg-light shadow-sm">
-                        <input class="form-check-input ms-0 me-3" type="radio" name="payMethod" id="momo" checked>
-                        <label class="form-check-label fw-bold d-flex align-items-center" for="momo">
+                        <input class="form-check-input ms-0 me-3" type="radio" name="payMethod" value="momo" id="momo" checked onchange="document.getElementById('checkoutForm').action='/booking/momo-payment'">
+                        <label class="form-check-label fw-bold d-flex align-items-center w-100" style="cursor: pointer" for="momo">
                             <img th:src="@{/images/momo_icon.png}" width="25" class="me-2" onerror="this.style.display='none'">
-                            Ví điện tử (MoMo / ZaloPay)
+                            Thanh toán qua Ví điện tử MoMo
+                        </label>
+                    </div>
+
+                    <div class="form-check border rounded p-3 mb-2 bg-light shadow-sm">
+                        <input class="form-check-input ms-0 me-3" type="radio" name="payMethod" value="cash" id="cash" onchange="document.getElementById('checkoutForm').action='/booking/confirm'">
+                        <label class="form-check-label fw-bold d-flex align-items-center w-100" style="cursor: pointer" for="cash">
+                            <i class="fas fa-money-bill-wave text-success fs-4 me-2"></i>
+                            Thanh toán tại quầy
                         </label>
                     </div>
                 </div>
@@ -78,7 +87,7 @@
                           th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
                 </div>
 
-                <form th:action="@{/booking/confirm}" method="post">
+                <form id="checkoutForm" th:action="@{/booking/momo-payment}" method="post">
                     <input type="hidden" name="showtimeId" th:value="${showtime.id}">
 
                     <input type="hidden" name="seatIds" th:value="${#strings.listJoin(seatIds, ',')}">
@@ -87,7 +96,7 @@
 
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-success btn-confirm shadow-sm">
-                            XÁC NHẬN ĐẶT VÉ
+                            <i class="fas fa-check-circle me-1"></i> XÁC NHẬN ĐẶT VÉ
                         </button>
                         <a href="javascript:history.back()" class="btn btn-link text-decoration-none text-muted mt-2">
                             <i class="fas fa-arrow-left me-1"></i> Quay lại thay đổi ghế
